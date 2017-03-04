@@ -1,39 +1,17 @@
 ---
-- include: setup-Debian.yml
-  when: ansible_os_family == 'Debian'
+- include: tasks/oah-install.yml
+  when: oah_command == "install"
 
-# TODO: Remove this task after Ansible 2.x npm module bug is fixed. See:
-# https://github.com/ansible/ansible-modules-extras/issues/1375
-- name: Ensure forever is installed (to run Node.js apps).
-  npm: name=forever global=yes state=present
-  become: yes
-  become_user: "{{ nodejs_install_npm_user }}"
-  when: nodejs_forever
+- include: tasks/oah-update.yml
+  when: oah_command == "update"
 
-- name: Ensure forever is at the latest release.
-  npm: name=forever global=yes state=latest
-  become: yes
-  become_user: "{{ nodejs_install_npm_user }}"
-  when: nodejs_forever
+- include: tasks/oah-remove.yml
+  when: oah_command == "remove"
 
-# TODO: Remove this task after Ansible 2.x npm module bug is fixed. See:
-# https://github.com/ansible/ansible-modules-extras/issues/1375
-- name: Ensure npm global packages are installed.
-  npm:
-    name: "{{ item.name }}"
-    version: "{{ item.version | default('') }}"
-    global: yes
-    state: present
-  become: yes
-  become_user: "{{ nodejs_install_npm_user }}"
-  with_items: nodejs_npm_global_packages
+- include: tasks/oah-reset.yml
+  when: oah_command == "reset"
 
-- name: Ensure npm global packages are at the latest release.
-  npm:
-    name: "{{ item.name }}"
-    version: "{{ item.version | default('') }}"
-    global: yes
-    state: latest
-  become: yes
-  become_user: "{{ nodejs_install_npm_user }}"
-  with_items: nodejs_npm_global_packages
+- include: tasks/oah-validate.yml
+  when: oah_command == "validate"
+
+#- include: tasks/oah-{{ oah_command }}.yml

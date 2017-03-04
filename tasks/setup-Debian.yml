@@ -1,11 +1,11 @@
 ---
-- name: Configure Debian repo version.
-  set_fact:
-    debian_repo_version: "{{ nodejs_version if '4' not in nodejs_version else '4.x' }}"
+- name: Ensure apt-transport-https is installed.
+  apt: name=apt-transport-https state=present
 
 - name: Add Nodesource apt key.
   apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource.gpg.key
+    url: https://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0x1655A0AB68576280
+    id: "68576280"
     state: present
 
 - name: Add NodeSource repositories for Node.js.
@@ -13,8 +13,13 @@
     repo: "{{ item }}"
     state: present
   with_items:
-    - "deb https://deb.nodesource.com/node_{{ debian_repo_version }} {{ ansible_distribution_release }} main"
-    - "deb-src https://deb.nodesource.com/node_{{ debian_repo_version }} {{ ansible_distribution_release }} main"
+    - "deb https://deb.nodesource.com/node_{{ nodejs_version }} {{ ansible_distribution_release }} main"
+    - "deb-src https://deb.nodesource.com/node_{{ nodejs_version }} {{ ansible_distribution_release }} main"
+  register: node_repo
+
+- name: Update apt cache if repo was added.
+  apt: update_cache=yes
+  when: node_repo.changed
 
 - name: Ensure Node.js and npm are installed.
-  apt: "name=nodejs={{ nodejs_version }}* state=present update_cache=yes"
+  apt: "name=nodejs={{ nodejs_version|regex_replace('x', '') }}* state=present"
